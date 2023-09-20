@@ -31,13 +31,22 @@ let string_make_fwork fwork =
   String.init (Array.length xs) (fun i -> xs.(i))
 ;;
 
+let is_upper c = 
+  'A' <= c && c <= 'Z'
+;;
+
+let adjust_char c =
+  if is_upper c then Char.code c
+  else 1000 + Char.code c
+;;
+
 let string_merge cs1 cs2 =
   let index1 = ref 0 and index2 = ref 0 in
   let length1 = String.length cs1 and length2 = String.length cs2 in
 
   string_make_fwork (fun yield ->
     while !index1 < length1 && !index2 < length2 do
-      if cs1.[!index1] <= cs2.[!index2] then (
+      if adjust_char cs1.[!index1] <= adjust_char cs2.[!index2] then (
         yield cs1.[!index1];
         incr index1
       ) else (
@@ -57,4 +66,3 @@ let string_merge cs1 cs2 =
     done
   )
 ;;
-
