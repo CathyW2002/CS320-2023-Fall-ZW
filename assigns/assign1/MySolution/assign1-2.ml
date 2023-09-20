@@ -13,13 +13,13 @@ string_merge(cs1)(cs2) equals "1234abcde"
 *)
 
 let string_make_fwork(fwork: (char -> unit) -> unit): string =
-  let xs =
-    Array.of_list(list_make_fwork(fwork)) 
-  in String.init (Array.length(xs)) (fun i -> xs.(i))
-
-let string_of_char c = String.make 1 c
-
-let string_to_fwork s f = String.iter f s
+  let list_make_fwork fwork = 
+    let xs = ref [] in
+    fwork (fun x -> xs := x :: !xs);
+    List.rev !xs 
+  in
+  let xs = Array.of_list(list_make_fwork(fwork)) in
+  String.init (Array.length(xs)) (fun i -> xs.(i))
 
 let string_merge cs1 cs2 =
   let fwork_merge f = 
