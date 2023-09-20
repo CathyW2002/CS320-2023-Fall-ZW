@@ -28,15 +28,17 @@ exception Found_132_pattern
 
 let string_avoid_132 (cs: string): bool =
     let n = string_length cs in
-
     try
-        for i = 0 to n - 3 do
-            for j = i + 1 to n - 2 do
-                if cs.[j] > cs.[i] then
-                    for k = j + 1 to n - 1 do
-                        if cs.[k] > cs.[i] && cs.[k] < cs.[j] then
-                            raise Found_132_pattern
-                    done
+        for i = 0 to n-3 do
+            let smallest = ref cs.[i] in
+            let largest_after_smallest = ref cs.[i] in
+            for j = i+1 to n-1 do
+                if cs.[j] < !smallest then
+                    smallest := cs.[j]
+                else if cs.[j] > !smallest && cs.[j] > !largest_after_smallest then
+                    largest_after_smallest := cs.[j]
+                else if cs.[j] > !smallest && cs.[j] < !largest_after_smallest then
+                    raise Found_132_pattern
             done
         done;
         true
