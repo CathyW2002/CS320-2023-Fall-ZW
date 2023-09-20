@@ -22,19 +22,25 @@ avoid.
 fun string_avoid_132(cs: string): bool
 *)
 
-exception Found_132
-
-let string_avoid_132 (cs: string): bool =
+let string_avoid_132 cs =
   let n = String.length cs in
-  try
-    for i = 0 to n - 1 do
-      for j = i + 1 to n - 1 do
-        for k = j + 1 to n - 1 do
-          if cs.[i] < cs.[k] && cs.[k] < cs.[j] then
-            raise Found_132
-        done
-      done
-    done;
-    true
-  with Found_132 -> false
+  
+  (* Helper function to check if characters at positions i, j, k form a 132-like sequence *)
+  let is_132 i j k =
+    let a = int_of_char cs.[i] in
+    let b = int_of_char cs.[j] in
+    let c = int_of_char cs.[k] in
+    a < c && c < b
+  in
+  
+  let rec loop i j k =
+    if i >= n || j >= n || k >= n then
+      true
+    else if is_132 i j k then
+      false
+    else
+      loop i (j + 1) (k + 1) || loop i j (k + 1) || loop (i + 1) j k
+  in
+
+  loop 0 1 2
 ;;
