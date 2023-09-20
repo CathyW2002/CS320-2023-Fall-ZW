@@ -24,25 +24,20 @@ fun string_avoid_1324(cs: string): bool
 
 (* ****** ****** *)
 
-let string_avoid_1324 (cs:string): bool =
+let string_avoid_1324 (cs: string): bool =
   let n = String.length cs in
-  
-  (* Use exception for early loop exit *)
-  let module E = struct exception Found1324 end in
   try
     for i = 0 to n-4 do
       for j = i+1 to n-3 do
-        if cs.[j] > cs.[i] then
-          for k = j+1 to n-2 do
-            if cs.[k] < cs.[j] && cs.[k] > cs.[i] then
-              for l = k+1 to n-1 do
-                if cs.[l] > cs.[k] && cs.[l] > cs.[j] then
-                  (* Found a 1324 pattern *)
-                  raise E.Found1324
-              done;
+        for k = j+1 to n-2 do
+          for l = k+1 to n-1 do
+            if cs.[i] < cs.[k] && cs.[k] < cs.[j] && cs.[j] < cs.[l] then
+              (* Found a 1324 pattern *)
+              raise Exit;
           done;
+        done;
       done;
     done;
-    true (* If we get here, no 1324 pattern found *)
-  with E.Found1324 -> false (* Found a 1324 pattern *)
+    true (* If loops complete without finding 1324 pattern *)
+  with Exit -> false
 ;;
