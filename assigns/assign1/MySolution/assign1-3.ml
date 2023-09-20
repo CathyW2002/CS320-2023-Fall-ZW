@@ -22,21 +22,24 @@ avoid.
 fun string_avoid_132(cs: string): bool
 *)
 
-let string_length = String.length
-
-exception Found_132_pattern
-
 let string_avoid_132 (cs: string): bool =
-  let n = string_length cs in
-  try
-    for a = 0 to n-3 do
-      for b = a+1 to n-2 do
-        for c = b+1 to n-1 do
-          if cs.[a] < cs.[c] && cs.[c] < cs.[b] then
-            raise Found_132_pattern
+    let n = String.length cs in
+    let exists_smaller_than_a_after_b a b =
+        for k = b+1 to n-1 do
+            if cs.[k] > cs.[a] && cs.[k] < cs.[b] then
+                return false
         done;
-      done;
-    done;
-    true
-  with Found_132_pattern -> false
+        true
+    in
+    try
+        for i = 0 to n-3 do
+            for j = i+1 to n-2 do
+                if cs.[i] < cs.[j] then
+                    if not (exists_smaller_than_a_after_b i j) then
+                        raise Exit
+                end
+            done
+        done;
+        true
+    with Exit -> false
 ;;
