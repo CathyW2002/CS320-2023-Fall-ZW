@@ -12,6 +12,7 @@ For instance, if cs1 = "abcde" and cs2 = "1234", then
 string_merge(cs1)(cs2) equals "1234abcde"
 *)
 
+#use "./../assign1.ml";;
 #use "./../../../classlib/OCaml/MyOCaml.ml";;
 
 let list_reverse lst =
