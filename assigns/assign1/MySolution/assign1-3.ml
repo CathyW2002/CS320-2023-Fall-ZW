@@ -22,8 +22,10 @@ avoid.
 fun string_avoid_132(cs: string): bool
 *)
 
+let string_length = String.length;;
+
 let string_avoid_132 (cs:string): bool =
-  let n = String.length cs in
+  let n = string_length cs in
   
   for i = 0 to n-3 do
     for j = i+1 to n-2 do
