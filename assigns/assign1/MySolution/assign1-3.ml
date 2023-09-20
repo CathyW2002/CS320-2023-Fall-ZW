@@ -22,6 +22,9 @@ avoid.
 fun string_avoid_132(cs: string): bool
 *)
 
+#use "./../assign1.ml";;
+#use "./../../../classlib/OCaml/MyOCaml.ml";;
+
 let string_avoid_132 (cs: string): bool =
     let n = String.length cs in
     let exists_132 a b =
