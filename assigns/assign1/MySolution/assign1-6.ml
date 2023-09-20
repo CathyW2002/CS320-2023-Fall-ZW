@@ -24,6 +24,9 @@ fun string_avoid_1324(cs: string): bool
 
 (* ****** ****** *)
 
+#use "./../assign1.ml";;
+#use "./../../../classlib/OCaml/MyOCaml.ml";;
+
 let string_avoid_1324 (cs: string): bool =
   let n = String.length cs in
   try
