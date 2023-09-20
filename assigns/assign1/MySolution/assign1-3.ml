@@ -24,21 +24,16 @@ fun string_avoid_132(cs: string): bool
 
 let string_avoid_132 cs =
   let n = String.length cs in
-  let stack = Stack.create () in
-  let c = ref (int_of_char '9' + 1) in
   
-  for i = (n - 1) downto 0 do
-    if (int_of_char cs.[i]) < !c then
-      (* Found a 132 pattern *)
-      exit 1
-    else
-      (* Check and update c *)
-      while (not (Stack.is_empty stack)) && (int_of_char cs.[i] > Stack.top stack) do
-        c := Stack.pop stack
-      done;
-
-      (* Add current element to stack *)
-      Stack.push (int_of_char cs.[i]) stack
+  for i = 0 to n-3 do
+    for j = i+1 to n-2 do
+      if cs.[j] > cs.[i] then
+        for k = j+1 to n-1 do
+          if cs.[k] < cs.[j] && cs.[k] > cs.[i] then
+            (* Found a 132 pattern *)
+            false
+        done;
+    done;
   done;
   true
 ;;
