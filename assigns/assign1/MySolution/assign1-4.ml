@@ -15,6 +15,10 @@ For instance, intrep_add("1116123")("222987") = "1339110"
 Note that ds1 and ds2 can be arbitrarily long. Thus,
 converting ds1 and ds2 to integers can cause overflow.
 *)
+
+#use "./../assign1.ml";;
+#use "./../../../classlib/OCaml/MyOCaml.ml";;
+
 let intrep_add (ds1: string) (ds2: string): string =
   let carry = ref 0 in
   let len1 = String.length ds1 in
