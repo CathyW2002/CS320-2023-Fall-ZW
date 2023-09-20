@@ -12,6 +12,8 @@ For instance, if cs1 = "abcde" and cs2 = "1234", then
 string_merge(cs1)(cs2) equals "1234abcde"
 *)
 
+import MyOCaml.ml from classlib/OCaml
+
 let list_reverse lst =
   let rec aux acc = function
     | [] -> acc
