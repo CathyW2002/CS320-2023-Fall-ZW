@@ -12,6 +12,8 @@ For instance, if cs1 = "abcde" and cs2 = "1234", then
 string_merge(cs1)(cs2) equals "1234abcde"
 *)
 
+let string_to_fwork s f = String.iter f s
+
 let string_make_fwork(fwork: (char -> unit) -> unit): string =
   let list_make_fwork fwork = 
     let xs = ref [] in
