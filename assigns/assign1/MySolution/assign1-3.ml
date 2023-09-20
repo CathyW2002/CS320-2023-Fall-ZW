@@ -24,23 +24,21 @@ fun string_avoid_132(cs: string): bool
 
 let string_avoid_132 cs =
   let n = String.length cs in
+  let stack = Stack.create () in
+  let c = ref (int_of_char '9' + 1) in
   
-  (* Helper function to check if characters at positions i, j, k form a 132-like sequence *)
-  let is_132 i j k =
-    let a = int_of_char cs.[i] in
-    let b = int_of_char cs.[j] in
-    let c = int_of_char cs.[k] in
-    a < c && c < b
-  in
-  
-  let rec loop i j k =
-    if i >= n || j >= n || k >= n then
-      true
-    else if is_132 i j k then
-      false
+  for i = (n - 1) downto 0 do
+    if (int_of_char cs.[i]) < !c then
+      (* Found a 132 pattern *)
+      exit 1
     else
-      loop i (j + 1) (k + 1) || loop i j (k + 1) || loop (i + 1) j k
-  in
+      (* Check and update c *)
+      while (not (Stack.is_empty stack)) && (int_of_char cs.[i] > Stack.top stack) do
+        c := Stack.pop stack
+      done;
 
-  loop 0 1 2
+      (* Add current element to stack *)
+      Stack.push (int_of_char cs.[i]) stack
+  done;
+  true
 ;;
