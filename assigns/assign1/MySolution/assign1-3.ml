@@ -24,20 +24,17 @@ fun string_avoid_132(cs: string): bool
 
 let string_avoid_132 (cs: string): bool =
     let n = String.length cs in
-    let exists_smaller_than_a_after_b a b =
+    let exists_132 a b =
         for k = b+1 to n-1 do
             if cs.[k] > cs.[a] && cs.[k] < cs.[b] then
-                return false
-        done;
-        true
+                raise Exit
+        done
     in
     try
         for i = 0 to n-3 do
             for j = i+1 to n-2 do
                 if cs.[i] < cs.[j] then
-                    if not (exists_smaller_than_a_after_b i j) then
-                        raise Exit
-                end
+                    exists_132 i j
             done
         done;
         true
