@@ -27,20 +27,16 @@ let string_length = String.length
 exception Found_132_pattern
 
 let string_avoid_132 (cs: string): bool =
-    let n = string_length cs in
-    try
-        for i = 0 to n-3 do
-            let smallest = ref cs.[i] in
-            let largest_after_smallest = ref cs.[i] in
-            for j = i+1 to n-1 do
-                if cs.[j] < !smallest then
-                    smallest := cs.[j]
-                else if cs.[j] > !smallest && cs.[j] > !largest_after_smallest then
-                    largest_after_smallest := cs.[j]
-                else if cs.[j] > !smallest && cs.[j] < !largest_after_smallest then
-                    raise Found_132_pattern
-            done
+  let n = string_length cs in
+  try
+    for a = 0 to n-3 do
+      for b = a+1 to n-2 do
+        for c = b+1 to n-1 do
+          if cs.[a] < cs.[c] && cs.[c] < cs.[b] then
+            raise Found_132_pattern
         done;
-        true
-    with Found_132_pattern -> false
+      done;
+    done;
+    true
+  with Found_132_pattern -> false
 ;;
