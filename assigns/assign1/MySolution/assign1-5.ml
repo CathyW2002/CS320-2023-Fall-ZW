@@ -20,6 +20,10 @@ string_longest_ascend returns "123456"
 For instance, given "1234511111", the function
 string_longest_ascend returns "111111".
 *)
+
+#use "./../assign1.ml";;
+#use "./../../../classlib/OCaml/MyOCaml.ml";;
+
 let string_longest_ascend (xs:string):string =
   let n = String.length xs in
   if n = 0 then "" else
