@@ -6,14 +6,23 @@ fun str2int(cs: string): int
 In particular, it is expected that str2int(int2str(x)) = x
 *)
 
-let str2int (cs: string): int =
+let ord = Char.code
+
+let str2int(cs: string): int =
   let len = String.length cs in
-  let base = 10 in
-  let rec helper idx acc =
+
+  (* Convert a character to its integer representation *)
+  let char_to_digit c = ord c - ord '0' in
+
+  let rec aux idx acc =
     if idx = len then acc
     else
-      let char_val = Char.code cs.[idx] - Char.code '0' in
-      helper (idx + 1) (acc * base + char_val)
+      let digit = char_to_digit (string_get cs idx) in
+      aux (idx + 1) (acc * 10 + digit)
   in
-  helper 0 0
+
+  if string_get cs 0 = '-' then
+    -1 * (aux 1 0)  (* If the string starts with '-', it's a negative number *)
+  else
+    aux 0 0
 ;;
