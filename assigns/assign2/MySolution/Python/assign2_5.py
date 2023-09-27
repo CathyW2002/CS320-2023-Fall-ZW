@@ -1,4 +1,4 @@
-from MyPython import *
+
 
 def fnlist_reverse(xs):
     res = fnlist_nil()
