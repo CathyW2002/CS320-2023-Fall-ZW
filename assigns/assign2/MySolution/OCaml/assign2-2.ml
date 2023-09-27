@@ -1,4 +1,5 @@
 #use "./../../../classlib/OCaml/MyOCaml.ml"
+#use "./../assign2.ml";;
 (* Define exception *)
 exception MySubscript;;
 
