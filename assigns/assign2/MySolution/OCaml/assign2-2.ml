@@ -1,15 +1,18 @@
 #use "./../../../classlib/OCaml/MyOCaml.ml"
-#use "./../assign2.ml";;
+#use "./../../assign2.ml"
+
 (* Define exception *)
 exception MySubscript;;
 
-(* Define mylist data type *)
-type 'a mylist =
-  | MyNil
-  | MyCons of 'a * 'a mylist
-  | MySnoc of 'a mylist * 'a
-  | MyReverse of 'a mylist
-  | MyAppend2 of 'a mylist * 'a mylist
+(* Define mylist_length as a placeholder; replace with your actual implementation *)
+let rec mylist_length (xs: 'a mylist): int = 
+  match xs with
+  | MyNil -> 0
+  | MyCons(_, xs) -> 1 + mylist_length xs
+  | MySnoc(xs, _) -> 1 + mylist_length xs
+  | MyReverse(xs) -> mylist_length xs
+  | MyAppend2(xs1, xs2) -> mylist_length xs1 + mylist_length xs2
+;;
 
 (* Helper function to handle MyReverse case *)
 let rec reverse xs =
@@ -38,14 +41,4 @@ let rec mylist_get_at (xs: 'a mylist) (i0: int): 'a =
       let len1 = mylist_length xs1 in
       if i0 < len1 then mylist_get_at xs1 i0
       else mylist_get_at xs2 (i0 - len1)
-;;
-
-(* Define mylist_length as a placeholder; replace with your actual implementation *)
-let rec mylist_length (xs: 'a mylist): int = 
-  match xs with
-  | MyNil -> 0
-  | MyCons(_, xs) -> 1 + mylist_length xs
-  | MySnoc(xs, _) -> 1 + mylist_length xs
-  | MyReverse(xs) -> mylist_length xs
-  | MyAppend2(xs1, xs2) -> mylist_length xs1 + mylist_length xs2
 ;;
