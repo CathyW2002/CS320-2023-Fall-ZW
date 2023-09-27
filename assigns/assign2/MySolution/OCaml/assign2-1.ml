@@ -1,5 +1,12 @@
 #use "./../../../classlib/OCaml/MyOCaml.ml"
 
+type 'a mylist =
+  | MyNil
+  | MyCons of 'a * 'a mylist
+  | MySnoc of 'a mylist * 'a
+  | MyReverse of 'a mylist
+  | MyAppend2 of 'a mylist * 'a mylist
+
 let
 mylist_subscript_exn
 ( (*void*) ): 'a = raise MySubscript;;
