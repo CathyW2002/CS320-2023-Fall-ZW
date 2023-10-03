@@ -20,40 +20,16 @@ and [2;1] are DIFFERENT.
 #use "./../../../../classlib/OCaml/MyOCaml.ml";;
 
 let list_nchoose xs n0 =
-  let len = list_length xs in
-  
-  let indices_to_subset indices =
-    list_make_fwork (fun work ->
-      list_foreach indices (fun i -> work (List.nth xs i))
-    )
+  let rec extend prefix remaining n =
+    if n = 0 then
+      list_make_fwork (fun work -> work prefix)
+    else
+      match remaining with
+      | [] -> list_make_fwork (fun _ -> ())
+      | x::xs' -> 
+        let with_x = extend (x::prefix) xs' (n-1) in
+        let without_x = extend prefix xs' n in
+        list_concat [with_x; without_x]
   in
-
-  let init_indices = list_make_fwork (fun work -> int1_foreach len (fun i -> work [i])) in
-  
-  let extend_subsets_indices current_indices =
-    list_make_fwork (fun work ->
-      list_foreach current_indices (fun subset ->
-        let last_idx = List.hd subset in
-        int1_foreach len (fun i ->
-          if i > last_idx && not (List.mem i subset) then 
-            work (i :: subset)
-        )
-      )
-    )
-  in
-
-  let rec build_combinations k current_indices =
-    if k = n0 then 
-      list_make_fwork (fun work ->
-        list_foreach current_indices (fun subset -> work (indices_to_subset subset))
-      )
-    else 
-      build_combinations (k + 1) (extend_subsets_indices current_indices)
-  in
-  
-  build_combinations 1 init_indices
-;;
-
-let list_length xs = 
-  list_foldleft xs 0 (fun acc _ -> acc + 1)
+  extend [] xs n0
 ;;
