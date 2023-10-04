@@ -1,60 +1,43 @@
-class Node:
-    def __init__(self, data=None, next=None):
-        self.data = data
-        self.next = next
+import sys
+sys.path.append("./../../../../classlib/Python")
+from MyPython import *
 
-class mylist:
-    def __init__(self):
-        self.head = None
+class MyList:
+    pass
 
-    def append(self, data):
-        if not self.head:
-            self.head = Node(data)
-        else:
-            curr = self.head
-            while curr.next:
-                curr = curr.next
-            curr.next = Node(data)
+class Empty(MyList):
+    def __repr__(self):
+        return "[]"
 
-    def __iter__(self):
-        self._curr = self.head
-        return self
+class Cons(MyList):
+    def __init__(self, head, tail):
+        self.head = head
+        self.tail = tail
 
-    def __next__(self):
-        if self._curr:
-            data = self._curr.data
-            self._curr = self._curr.next
-            return data
-        raise StopIteration
+    def __repr__(self):
+        return f"{self.head} :: {repr(self.tail)}"
 
-    def __reversed__(self):
-        prev = None
-        current = self.head
-        while current:
-            next_node = current.next
-            current.next = prev
-            prev = current
-            current = next_node
-        self.head = prev
-        return self
 
-    def foreach(self, work):
-        curr = self.head
-        while curr:
-            work(curr.data)
-            curr = curr.next
+# Define the list_foreach function
+def list_foreach(xs, work):
+    if isinstance(xs, Empty):
+        return
+    elif isinstance(xs, Cons):
+        work(xs.head)
+        list_foreach(xs.tail, work)
 
-    def rforeach(self, work):
-        for data in reversed(self):
-            work(data)
 
-    @staticmethod
-    def list_reverse(lst):
-        reversed_list = mylist()
-        curr = lst.head
-        while curr:
-            new_node = Node(curr.data)
-            new_node.next = reversed_list.head
-            reversed_list.head = new_node
-            curr = curr.next
-        return reversed_list
+# Define the list_reverse helper functions and list_reverse itself
+def list_revapp(xs, ys=Empty()):
+    if isinstance(xs, Empty):
+        return ys
+    elif isinstance(xs, Cons):
+        return list_revapp(xs.tail, Cons(xs.head, ys))
+
+def list_reverse(xs):
+    return list_revapp(xs)
+
+
+# Define the list_rforeach function
+def list_rforeach(xs, work):
+    list_foreach(list_reverse(xs), work)
