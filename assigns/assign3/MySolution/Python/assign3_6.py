@@ -17,27 +17,43 @@ class Cons(MyList):
     def __repr__(self):
         return f"{self.head} :: {repr(self.tail)}"
 
+def mylist_nil():
+    return Empty()
 
-# Define the list_foreach function
-def list_foreach(xs, work):
+def mylist_cons(x, xs):
+    return Cons(x, xs)
+
+def mylist_snoc(xs, x):
     if isinstance(xs, Empty):
-        return
-    elif isinstance(xs, Cons):
-        work(xs.head)
-        list_foreach(xs.tail, work)
+        return mylist_cons(x, xs)
+    else:
+        return mylist_cons(xs.head, mylist_snoc(xs.tail, x))
 
-
-# Define the list_reverse helper functions and list_reverse itself
-def list_revapp(xs, ys=Empty()):
-    if isinstance(xs, Empty):
-        return ys
-    elif isinstance(xs, Cons):
-        return list_revapp(xs.tail, Cons(xs.head, ys))
+def mylist_append2(xs1, xs2):
+    if isinstance(xs1, Empty):
+        return xs2
+    else:
+        return mylist_cons(xs1.head, mylist_append2(xs1.tail, xs2))
 
 def list_reverse(xs):
     return list_revapp(xs)
 
+def list_revapp(xs, ys=Empty()):
+    if isinstance(xs, Empty):
+        return ys
+    else:
+        return list_revapp(xs.tail, mylist_cons(xs.head, ys))
 
-# Define the list_rforeach function
-def list_rforeach(xs, work):
-    list_foreach(list_reverse(xs), work)
+def mylist_reverse(xs):
+    return list_reverse(xs)
+
+def mylist_foreach(xs, work):
+    if isinstance(xs, Empty):
+        return
+    else:
+        work(xs.head)
+        mylist_foreach(xs.tail, work)
+
+def mylist_rforeach(xs, work):
+    reversed_list = mylist_reverse(xs)
+    mylist_foreach(reversed_list, work)
