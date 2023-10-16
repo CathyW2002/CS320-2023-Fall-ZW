@@ -1,15 +1,26 @@
 #use "./../../../../classlib/OCaml/MyOCaml.ml";;
 
-(* Definitions of the custom stream types and exceptions *)
-exception Empty;;
+exception Empty
 
-type 'a strcon = unit -> 'a strcell;;
-and 'a strcell = StrNil | StrCons of 'a * 'a strcon;;
+type 'a stream = unit -> 'a strcell
+and 'a strcell = StrNil | StrCons of 'a * 'a stream;;
 
-(* Implementing the stream for the ln(2) series *)
-let the_ln2_stream : float strcon =
-  let rec next i sum =
-    let new_sum = if i mod 2 = 0 then sum -. (1. /. float_of_int i) else sum +. (1. /. float_of_int i) in
-    fun () -> StrCons(new_sum, next (i + 1) new_sum)
+let the_ln2_stream : float stream =
+  let rec next i =
+    fun () ->
+      let value = if i mod 2 = 0 then -(1. /. float_of_int i) else 1. /. float_of_int i in
+      StrCons (value, next (i + 1))
   in
-  next 1 1.0;;
+  next 1;;
+
+let partial_sums (s : float stream) : float stream =
+  let rec helper acc s =
+    match s () with
+    | StrNil -> fun () -> StrNil
+    | StrCons (value, rest) ->
+      let new_acc = acc +. value in
+      fun () -> StrCons (new_acc, helper new_acc rest)
+  in
+  helper 0.0 s;;
+
+let the_ln2_partial_sums = partial_sums the_ln2_stream;;
