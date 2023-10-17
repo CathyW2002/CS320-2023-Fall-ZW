@@ -1,15 +1,35 @@
+import sys
+sys.path.append("./../../../../classlib/Python")
+from MyPython import *
+
+def string_length(cs):
+    return len(cs)  
+
+def string_get_at(cs):
+    def get_at(i):
+        if i < 0 or i >= len(cs):
+            raise IndexError
+        return cs[i]
+    return get_at
+
+def string_tabulate(n, func):
+    return ''.join(func(i) for i in range(n))
+
 def string_fset_at(cs, i0, c0):
-    # Assuming 'string_tabulate' creates a string by applying a function over the indices of the string
-    # and 'string_length' and 'string_get_at' are the equivalent to len(str) and str[index] respectively.
+    return string_tabulate(string_length(cs), lambda i: c0 if i == i0 else cs[i])
+
+def string_foreach(cs, func):
+    for c in cs:
+        func(c)
+
+
+def string_fset_at(cs, i0, c0):
     return ''.join([c0 if i == i0 else cs[i] for i in range(len(cs))])
 
 def list_of_buddies(word):
-    # Assumption: 'list_make_fwork' collects items created within the 'work' function into a list
-    # 'int1_foreach' iterates from 0 to n-1, 'string_foreach' iterates through each character of a string.
     
     result_list = []  # This list will collect the items.
 
-    # Assuming alphabet is a string of characters from a to z
     alphabet = ''.join([chr(ord('a') + i) for i in range(26)])
 
     def work(item):
@@ -22,8 +42,3 @@ def list_of_buddies(word):
                 work(string_fset_at(word, i0, c1))
 
     return result_list
-
-# Example of using list_of_buddies
-buddies = list_of_buddies("word")
-for buddy in buddies:
-    print(buddy)
