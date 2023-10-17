@@ -1,26 +1,22 @@
 #use "./../../../../classlib/OCaml/MyOCaml.ml";;
 
-exception Empty
+type 'a stream_cell = Nil | Cons of 'a * 'a stream
+and 'a stream = unit -> 'a stream_cell;;
 
-type 'a stream = unit -> 'a strcell
-and 'a strcell = StrNil | StrCons of 'a * 'a stream;;
-
-let the_ln2_stream : float stream =
-  let rec next i =
-    fun () ->
-      let value = if i mod 2 = 0 then -(1. /. float_of_int i) else 1. /. float_of_int i in
-      StrCons (value, next (i + 1))
+(* Function to generate the ln(2) series stream. *)
+let the_ln2_stream: float stream =
+  let rec next_term coeff index sign = 
+    let current_value = sign *. (1.0 /. coeff) in
+    let next_stream () = next_term (coeff +. 1.0) (index + 1) (sign *. -1.0) in (* Prepare the next term *)
+    Cons (current_value, next_stream)  (* Construct the current stream cell *)
   in
-  next 1;;
-
-let partial_sums (s : float stream) : float stream =
-  let rec helper acc s =
-    match s () with
-    | StrNil -> fun () -> StrNil
-    | StrCons (value, rest) ->
-      let new_acc = acc +. value in
-      fun () -> StrCons (new_acc, helper new_acc rest)
+  let rec partial_sum_stream value current_stream = 
+    match current_stream () with
+    | Nil -> Nil  (* No more elements *)
+    | Cons (head, tail) -> 
+        let new_sum = value +. head in  (* Add the current term to the partial sum *)
+        let next_stream () = partial_sum_stream new_sum tail in  (* Prepare the next stream *)
+        Cons (new_sum, next_stream)  (* Construct the current stream cell with the new sum *)
   in
-  helper 0.0 s;;
-
-let the_ln2_partial_sums = partial_sums the_ln2_stream;;
+  partial_sum_stream 0.0 (next_term 1.0 1 1.0)  (* Initialize the streams with the first term *)
+;;
