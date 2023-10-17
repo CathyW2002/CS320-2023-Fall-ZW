@@ -2,16 +2,21 @@
 
 type 'a stream = unit -> 'a strcon;;
 
-let rec gtree_streamize_dfs (tree: 'a gtree): 'a stream =
-  let rec dfs t continuation = match t with
-    | GTnil -> continuation ()
-    | GTcons (value, subtrees) ->
-        StrCons (value, fun () -> dfs_list subtrees continuation)
-  and dfs_list trees continuation = match trees with
-    | [] -> continuation ()
-    | t::ts -> dfs t (fun () -> dfs_list ts continuation)
+let gtree_streamize_dfs (tree: 'a gtree): 'a stream =
+  let rec dfs t = match t with
+    | GTnil -> StrNil
+    | GTcons (value, subtrees) -> 
+        StrCons (value, fun () -> dfs_list subtrees)
+  and dfs_list trees = match trees with
+    | [] -> StrNil
+    | t::ts -> 
+        let rec append_stream s1 s2 = match s1 with
+          | StrNil -> s2 ()
+          | StrCons (value, next_stream) -> StrCons (value, fun () -> append_stream (next_stream ()) s2)
+        in
+        append_stream (dfs t) (fun () -> dfs_list ts)
   in
-  fun () -> dfs tree (fun () -> StrNil) 
+  dfs tree
 ;;
 
 let gtree_streamize_bfs (tree: 'a gtree): 'a stream =
