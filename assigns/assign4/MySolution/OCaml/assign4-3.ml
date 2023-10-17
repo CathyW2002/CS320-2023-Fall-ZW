@@ -1,6 +1,6 @@
 #use "./../../../../classlib/OCaml/MyOCaml.ml";;
 
-type 'a stream = unit -> 'a strcon
+type 'a stream = unit -> 'a strcon;;
 
 let rec gtree_streamize_dfs (tree: 'a gtree): 'a stream =
   let rec dfs t continuation = match t with
@@ -12,6 +12,7 @@ let rec gtree_streamize_dfs (tree: 'a gtree): 'a stream =
     | t::ts -> dfs t (fun () -> dfs_list ts continuation)
   in
   fun () -> dfs tree (fun () -> StrNil) 
+;;
 
 let gtree_streamize_bfs (tree: 'a gtree): 'a stream =
   let bfs trees =
@@ -29,3 +30,4 @@ let gtree_streamize_bfs (tree: 'a gtree): 'a stream =
     extract_values trees []
   in
   fun () -> bfs [tree]
+;;
