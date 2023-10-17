@@ -15,14 +15,17 @@ let rec gtree_streamize_dfs (tree: 'a gtree): 'a stream =
 
 let gtree_streamize_bfs (tree: 'a gtree): 'a stream =
   let bfs trees =
-    let rec extract_values tree_list queue continuation = match tree_list with
+    let rec extract_values tree_list queue = match tree_list with
       | [] -> (match queue with
-          | [] -> continuation ()
-          | _ -> extract_values queue [] continuation)
-      | GTnil :: ts -> extract_values ts queue continuation
+          | [] -> StrNil  
+          | _ -> 
+              let next_level = list_reverse queue in
+              extract_values next_level [])
+      | GTnil :: ts -> extract_values ts queue
       | GTcons (value, subtrees) :: ts ->
-          StrCons (value, fun () -> extract_values ts (queue @ subtrees) continuation)
+          let new_queue = list_revapp (list_reverse subtrees) queue in
+          StrCons (value, fun () -> extract_values ts new_queue)
     in
-    extract_values trees [] (fun () -> StrNil)
+    extract_values trees []
   in
   fun () -> bfs [tree]
