@@ -1,19 +1,18 @@
 #use "./../../../../classlib/OCaml/MyOCaml.ml";;
 
-type 'a stream = Cons of 'a * (unit -> 'a stream);;
-
-let rec ln2_terms i sign = 
-  Cons (sign *. 1. /. float_of_int i, fun () -> ln2_terms (i + 1) (sign *. -1.))
+let rec ln2_terms i sign () = 
+  StrCons (sign /. float_of_int i, ln2_terms (i + 1) (-. sign))
 ;;
 
-let rec partial_sums sum stream = 
-  match stream with
-  | Cons (value, next) -> 
-      let new_sum = sum +. value in
-      Cons (new_sum, fun () -> partial_sums new_sum (next ()))
+let rec partial_sums acc stream_gen () = 
+  match stream_gen () with
+  | StrNil -> StrNil  (* No more elements *)
+  | StrCons (value, next_gen) -> 
+    let new_sum = acc +. value in
+    StrCons (new_sum, partial_sums new_sum next_gen) 
 ;;
 
-let the_ln2_stream () =
-  let terms = ln2_terms 1 1. in
-  partial_sums 0. terms
+let the_ln2_stream: unit -> float strcon = 
+  partial_sums 0.0 (ln2_terms 1 1.0)
 ;;
+
