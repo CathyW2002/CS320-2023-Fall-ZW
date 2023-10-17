@@ -2,9 +2,9 @@
 
 type 'a strcon =
   | StrNil
-  | StrCons of 'a * (unit -> 'a strcon)
+  | StrCons of 'a * (unit -> 'a strcon);;
 
-type 'a stream = unit -> 'a strcon
+type 'a stream = unit -> 'a strcon;;
 
 let rec insert_everywhere x lst =
   let rec aux prev acc = function
@@ -14,6 +14,7 @@ let rec insert_everywhere x lst =
       aux (hd :: prev) (new_list :: acc) tl
   in
   aux [] [] lst
+;;
 
 let rec permutations lst =
   match lst with
@@ -27,12 +28,15 @@ let rec permutations lst =
         aux (list_revapp new_lists acc) ls
     in
     aux [] perm_tl
+;;
 
 let rec list_to_stream lst () =
   match lst with
   | [] -> StrNil
   | hd :: tl -> StrCons (hd, list_to_stream tl)
+;;
 
 let list_permute (xs: 'a list) : 'a list stream =
   let perms = permutations xs in
   list_to_stream perms
+;;
