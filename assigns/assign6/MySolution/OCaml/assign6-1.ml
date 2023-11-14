@@ -13,6 +13,8 @@ the functions in classlib/OCaml/MyOCaml.ml
 *)
 (* ****** ****** *)
 
+#use "./../../../../classlib/OCaml/MyOCaml.ml";;
+
 (*
 //
 Assign6-1:
