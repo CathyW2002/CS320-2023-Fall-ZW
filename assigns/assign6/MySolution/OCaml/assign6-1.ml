@@ -1,29 +1,5 @@
-(* ****** ****** *)
-(*
-//
-Assign6:
-Parsing and parsing combinators
-//
-DUE: the 13th of November, 2023
-//
-Except for the basic arithmetic functions
-(including those on chars), you may only use
-the functions in classlib/OCaml/MyOCaml.ml
-//
-*)
-(* ****** ****** *)
-
 #use "./../../../../classlib/OCaml/MyOCaml.ml";;
 
-(*
-//
-Assign6-1:
-//
-Please implement a print and parse function. Using parser combinators. When
-given a valid string according to the grammar, your parse function returns an
-sexpr value encoding the expression.
-
-//
 let custom_map f xs =
   foreach_to_map_list list_foreach xs f
 ;;
@@ -107,6 +83,7 @@ let sexpr_parse s =
 ;;
 //
 
+(*
 Example (Accepted Strings):
 sexpr_parse "(add 1 2 3)" = Some (SAdd [SInt 1; SInt 2; Int 3])
 sexpr_parse "(mul (add 1 2) 3 (mul 1))" = Some (SMul [SAdd [SInt 1; SInt 2]; SInt 3; SMul [SInt 1]])
@@ -121,7 +98,6 @@ sexpr_parse "((mul 1 2)" = None
 
 (* ****** ****** *)
 
-(*
 
 Grammar (<expr> is the start symbol)
 
@@ -131,7 +107,6 @@ Grammar (<expr> is the start symbol)
 <expr>  ::= <num>
           | (add <exprs> )
           | (mul <exprs> )
-*)
 
 type sexpr =
   | SInt of int        (* 1, 2, 3, 4 ...  *)
