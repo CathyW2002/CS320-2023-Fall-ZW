@@ -19,7 +19,7 @@ let rec sexpr_to_string e =
   | SMul exprs -> "(mul " ^ (string_concat_list_with_space (custom_map sexpr_to_string exprs)) ^ ")"
 ;;
 
-let digit_to_int d = digit_of_char d
+let digit_to_int d = digit_of_char d;;
 
 let parse_number : int parser =
   let* digits = many1 digit in  (* many1 ensures we have at least one digit *)
@@ -27,7 +27,7 @@ let parse_number : int parser =
   pure number
 ;;
 
-let parse_space = satisfy char_iswhitespace ;;
+let parse_space = satisfy char_iswhitespace;;
 
 let parse_spaces : unit parser = many parse_space >| ()
 ;;
@@ -63,6 +63,7 @@ and parse_mul xs =
 
 let char c : char parser =
   satisfy (fun x -> x = c)
+;;
 
 let parse_parenthesized p : 'a parser =
   let* _ = parse_spaces in  (* Allow spaces before the opening parenthesis *)
