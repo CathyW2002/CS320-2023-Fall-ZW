@@ -192,11 +192,11 @@ let eval_command cmd (stack, trace) =
   | Div -> 
       (match stack with
       | Int j :: Int i :: rest -> 
-          ifj = 0 then 
-            Some ([], "Panic" :: trace))(* DivisionError: Division by Zero *)
+          if j = 0 then 
+              Some ([], "Panic" :: trace)  (* DivisionError: Division by Zero *)
           else 
-            Some ((Int (i / j)) :: rest, trace)
-      | _ -> Some ([], "Panic" :: trace)) (* DivError: Stack Underflow or Type Mismatch *)
+              Some ((Int (i / j)) :: rest, trace)
+      | _ -> Some ([], "Panic" :: trace)) 
   | And -> 
       (match stack with
       | Bool i :: Bool j :: rest -> Some ((Bool (i && j)) :: rest, trace)
