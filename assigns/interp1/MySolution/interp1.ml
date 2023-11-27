@@ -176,7 +176,7 @@ let eval_command cmd (stack, trace) =
   | Trace -> 
       (match stack with
       | [] -> Some ([], "Panic" :: trace)  
-      | c :: rest -> Some (rest, (constant_to_string c) :: trace))
+      | c :: _ -> Some (stack, (constant_to_string c) :: trace))
   | Add -> 
       (match stack with
       | Int i :: Int j :: rest -> Some ((Int (i + j)) :: rest, trace)
