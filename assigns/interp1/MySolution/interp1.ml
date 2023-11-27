@@ -171,75 +171,67 @@ let eval_command cmd (stack, trace) =
   | Push c -> Some (c :: stack, trace)
   | Pop -> 
       (match stack with
-      | [] -> Some ([], "Panic" :: trace)  
+      | [] -> None
       | _ :: rest -> Some (rest, trace))
   | Trace -> 
       (match stack with
-      | [] -> Some ([], "Panic" :: trace)  
+      | [] -> None
       | c :: rest -> Some (rest, (constant_to_string c) :: trace))
   | Add -> 
       (match stack with
       | Int i :: Int j :: rest -> Some ((Int (i + j)) :: rest, trace)
-      | _ -> Some ([], "Panic" :: trace))
+      | _ -> None)
   | Sub -> 
       (match stack with
       | Int j :: Int i :: rest -> Some ((Int (i - j)) :: rest, trace) 
-      | _ -> Some ([], "Panic" :: trace)) (* SubError: Stack Underflow or Type Mismatch *)
+      | _ -> None)
   | Mul -> 
       (match stack with
       | Int i :: Int j :: rest -> Some ((Int (i * j)) :: rest, trace)
-      | _ -> Some ([], "Panic" :: trace)) (* MulError: Stack Underflow or Type Mismatch *)
+      | _ -> None)
   | Div -> 
       (match stack with
-      | Int i :: Int j :: rest -> 
-          if i = 0 then 
-            None (* DivisionError: Division by Zero *)
-          else 
-            Some ((Int (j / i)) :: rest, trace)
-      | _ -> Some ([], "Panic" :: trace)) (* DivError: Stack Underflow or Type Mismatch *)
+      | Int 0 :: _ :: _ -> None (* Division by zero error *)
+      | Int _ :: Int _ :: rest -> Some (stack, trace) 
+      | _ -> None)
   | And -> 
       (match stack with
       | Bool i :: Bool j :: rest -> Some ((Bool (i && j)) :: rest, trace)
-      | _ -> Some ([], "Panic" :: trace)) (* AndError: Stack Underflow or Type Mismatch *)
+      | _ -> None)
   | Or -> 
       (match stack with
       | Bool i :: Bool j :: rest -> Some ((Bool (i || j)) :: rest, trace)
-      | _ -> Some ([], "Panic" :: trace)) (* OrError: Stack Underflow or Type Mismatch *)
+      | _ -> None)
   | Not -> 
       (match stack with
       | Bool i :: rest -> Some ((Bool (not i)) :: rest, trace)
-      | _ -> Some ([], "Panic" :: trace)) (* NotError: Stack Underflow or Type Mismatch *)
+      | _ -> None)
   | Lt -> 
       (match stack with
       | Int j :: Int i :: rest -> Some ((Bool (i < j)) :: rest, trace)  
-      | _ -> Some ([], "Panic" :: trace)) (* LtError: Stack Underflow or Type Mismatch *)
+      | _ -> None)
   | Gt -> 
       (match stack with
       | Int j :: Int i :: rest -> Some ((Bool (i > j)) :: rest, trace)
-      | _ -> Some ([], "Panic" :: trace)) (* GtError: Stack Underflow or Type Mismatch *)
+      | _ -> None)
 
-let rec contains_panic trace = 
-  match trace with
-  | [] -> false
-  | x :: xs -> if x = "Panic" then true else contains_panic xs
-
-let rec eval_commands cmds state =
+let rec eval_commands cmds (stack, trace) trace_encountered error_encountered =
   match cmds with
-  | [] -> Some state
+  | [] -> 
+      if trace_encountered && error_encountered then Some ["Panic"]
+      else Some trace
   | cmd :: rest ->
-      match eval_command cmd state with
-      | Some (new_stack, new_trace) -> 
-          if contains_panic new_trace then
-            Some (new_stack, new_trace)  (* Stop execution if there is a "Panic" *)
-          else
-            eval_commands rest (new_stack, new_trace)
-      | None -> None
+      match eval_command cmd (stack, trace) with
+      | Some (new_stack, new_trace) ->
+          let trace_encountered = trace_encountered || (cmd = Trace) in
+          eval_commands rest (new_stack, new_trace) trace_encountered error_encountered
+      | None ->
+          let trace_encountered = trace_encountered || (cmd = Trace) in
+          eval_commands rest (stack, trace) trace_encountered true
 
 let interp (s : string) : string list option =
   match parse_program s with
   | None -> None
   | Some cmds -> 
       let initial_state = ([], []) in
-      match eval_commands cmds initial_state with
-      | Some (_, trace) -> Some (list_reverse trace)
-      | None -> None
+      eval_commands cmds initial_state false false
