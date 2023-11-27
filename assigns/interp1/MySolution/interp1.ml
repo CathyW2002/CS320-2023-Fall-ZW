@@ -165,14 +165,6 @@ let parse_program s =
   in
   parse tokens
 
-let stack_to_string stack =
-  let reversed_stack = list_reverse stack in
-  let rec aux acc = function
-    | [] -> acc
-    | [last] -> acc ^ constant_to_string last  (* No comma for the last element *)
-    | hd :: tl -> aux (acc ^ constant_to_string hd ^ ", ") tl
-  in aux "" reversed_stack
-
 (* Evaluates a single command *)
 let eval_command cmd (stack, trace) =
   match cmd with
@@ -182,10 +174,9 @@ let eval_command cmd (stack, trace) =
       | [] -> Some ([], "Panic" :: trace)  
       | _ :: rest -> Some (rest, trace))
   | Trace -> 
-    if stack = [] then Some ([], "Panic" :: trace)
-    else
-      let stack_str = stack_to_string stack in
-      Some (stack, stack_str :: trace)
+     (match stack with
+      | [] -> Some ([], "Panic" :: trace)  
+      | c :: _ -> Some (stack, (constant_to_string c) :: trace))
   | Add -> 
       (match stack with
       | Int i :: Int j :: rest -> Some ((Int (i + j)) :: rest, trace)
