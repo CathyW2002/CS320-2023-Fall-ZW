@@ -12,6 +12,7 @@ Notes:
 
 *)
 
+
 type const =
   | Int of int
   | Bool of bool
@@ -28,6 +29,7 @@ and com =
   | PushClosure of closure
   | Pop
   | Trace
+  | Swap
   | Add
   | Sub
   | Mul 
@@ -72,7 +74,12 @@ let is_underscore = function
   | _ -> false
 
 let parse_symbol_char =
-  satisfy (fun c -> is_letter c || is_digit c || is_underscore c)
+  let is_first_char = ref true in
+  satisfy (fun c ->
+    let is_valid = is_letter c || is_digit c || (is_underscore c && not !is_first_char) in
+    if !is_first_char then is_first_char := false;
+    is_valid
+  )
 
 let parse_symbol : const parser =
   let* first_char = satisfy is_letter in  (* Symbols must start with a letter *)
@@ -95,11 +102,15 @@ let parse_const =
   parse_unit <|>
   parse_symbol
 
-
-let rec parse_com () = 
-  (keyword "Push" >> parse_const >>= fun c -> pure (Push c)) <|>
+let rec parse_com () =
+  let* _ = pure () in
+  Printf.printf "Parsing command...\n";
+  (keyword "Push" >> parse_const >>= fun c -> 
+  Printf.printf "Parsed Push\n";
+  pure (Push c)) <|>
   (keyword "Pop" >> pure Pop) <|>
-  (keyword "Trace" >> pure Trace) <|>
+  (keyword "Trace" >>= fun () -> pure Trace) <|>
+  (keyword "Swap" >> pure Swap) <|>
   (keyword "Add" >> pure Add) <|>
   (keyword "Sub" >> pure Sub) <|>
   (keyword "Mul" >> pure Mul) <|>
@@ -124,8 +135,9 @@ let rec parse_com () =
                       | _ -> fail)) <|>  
   (keyword "Call" >> pure Call) <|>
   (keyword "Return" >> pure Return)
-and parse_coms () = many (parse_com () << keyword ";")
-
+and parse_coms () =
+  let* _ = pure () in 
+  many (parse_com () << keyword ";")
 
 
 type trace = string list
@@ -166,7 +178,15 @@ let assoc_opt key lst =
   in
   aux lst
 
-let rec eval s t e p = match p with
+let rec eval s t e p =
+  Printf.printf "Evaluating command with stack: [%s]\n" 
+    (String.concat "; " (List.map (fun item ->
+      match item with
+      | Const c -> toString c
+      | Closure _ -> "[Closure]"
+      | Marker (_, _) -> "[Marker]") s));
+  match p with
+  | [] -> t
   | Push c :: p0 -> eval (Const c :: s) t e p0
   | PushClosure closure :: p0 -> eval (Closure closure :: s) t e p0
   | Pop :: p0 ->
@@ -182,6 +202,10 @@ let rec eval s t e p = match p with
                      | Marker (_, _) -> "[marker]")  (* Added Marker case *)
                   in eval (Const Unit :: s0) (str_c :: t) e p0
      | [] -> eval [] ("Panic" :: t) e p0)
+  | Swap :: p0 ->
+    (match s with
+     | x1 :: x2 :: s0 -> eval (x2 :: x1 :: s0) t e p0
+     | _ -> eval [] ("Panic" :: t) e p0)
   | Add :: p0 ->
     (match s with
      | Const (Int i) :: Const (Int j) :: s0 -> eval (Const (Int (i + j)) :: s0) t e p0
@@ -239,30 +263,42 @@ let rec eval s t e p = match p with
   | IfElse(c1, c2) :: p0 ->
     (match s with
      | Const (Bool b) :: s0 -> eval s0 t e (if b then list_append c1 p0 else list_append c2 p0)
-     | _ -> eval [] ("Panic" :: t) e p0)
+     | _ :: s0      (* IfElseError1 *) -> eval [] ("Panic" :: t) e p0
+     | []           (* IfElseError2 *) -> eval [] ("Panic" :: t) e p0)
   | Bind :: p0 ->
     (match s with
      | Const (Symbol sym) :: Const v :: s0 -> eval s0 t ((sym, v) :: e) p0
-     | _ -> eval [] ("Panic" :: t) e p0)
+     | _ :: s0      (* BindError1 *) -> eval [] ("Panic" :: t) e p0
+     | []           (* BindError2 *) -> eval [] ("Panic" :: t) e p0
+     | _ :: []      (* BindError3 *) -> eval [] ("Panic" :: t) e p0)
   | Lookup :: p0 ->
     (match s with
      | Const (Symbol sym) :: s0 -> 
        (match assoc_opt sym e with
         | Some v -> eval (Const v :: s0) t e p0
-        | None -> eval [] ("Panic" :: t) e [])
-     | _ -> eval [] ("Panic" :: t) e [])
+        | None      (* LookupError3 *) -> eval [] ("Panic" :: t) e p0)
+     | _ :: s0      (* LookupError1 *) -> eval [] ("Panic" :: t) e p0
+     | []           (* LookupError2 *) -> eval [] ("Panic" :: t) e p0)
   | Fun (name, body) :: p0 ->
-    let closure = { body; env = e } in
-    eval (Closure closure :: s) t e p0
+    (match s with
+     | Const (Symbol sym) :: Const v :: s0 ->
+        let closure = { body; env = e } in
+        eval (Closure closure :: s) t e p0
+     | _ :: s0      (* FunError1 *) -> eval [] ("Panic" :: t) e p0
+     | []           (* FunError2 *) -> eval [] ("Panic" :: t) e p0)
   | Call :: p0 ->
     (match s with
      | Closure { body; env } :: s0 -> eval (Marker (s0, e) :: s0) t env body
-     | _ -> eval [] ("Panic" :: t) e [])
+     | _ :: s0      (* CallError1 *) -> eval [] ("Panic" :: t) e p0
+     | []           (* CallError2 *) -> eval [] ("Panic" :: t) e p0
+     | _ :: []      (* CallError3 *) -> eval [] ("Panic" :: t) e p0)
   | Return :: p0 ->
     (match s with
      | Marker (s0, env0) :: _ -> eval s0 t env0 p0
-     | [] -> eval [] ("Panic" :: t) e p0  (* Handle empty stack *)
-     | _ -> eval [] ("Panic" :: t) e [])
+     | _ :: s0      (* ReturnError1 *) -> eval [] ("Panic" :: t) e p0
+     | []           (* ReturnError2 *) -> eval [] ("Panic" :: t) e p0
+     | _ :: []      (* ReturnError3 *) -> eval [] ("Panic" :: t) e p0)
+  | _ -> eval s ("Panic" :: t) e []
 
 
 (* ------------------------------------------------------------ *)
@@ -270,6 +306,7 @@ let rec eval s t e p = match p with
 (* putting it all together [input -> parser -> eval -> output] *)
 
 let interp (s : string) : string list option =
+  Printf.printf "Interpreting...\n";
   match string_parse (whitespaces >> parse_coms ()) s with
   | Some (p, []) ->
       let initial_stack = [] in  (* Initialize an empty stack *)
@@ -277,35 +314,3 @@ let interp (s : string) : string list option =
       let initial_environment = [] in  (* Initialize an empty environment *)
       Some (eval initial_stack initial_trace initial_environment p)  (* Start evaluation with the parsed program *)
   | _ -> None
-
-(* ------------------------------------------------------------ *)
-(* Test*)
-  let test_program () =
-  let program = 
-    "Push poly; \
-     Fun \
-     Push x; Bind; \
-       Push x; Lookup; \
-       Push x; Lookup; \
-       Mul; \
-       Push -4; \
-       Push x; Lookup; \
-       Mul; \
-     Add; \
-     Push 7; Add; \
-     Swap; \
-     Return; End; \
-     Push 3; \
-     Swap; \
-     Call; \
-     Trace;" 
-  in
-  let expected_output = Some ["4"] in
-  let actual_output = interp program in
-  actual_output = expected_output
-
-let () =
-  if test_program () then
-    print_endline "Test passed"
-  else
-    print_endline "Test failed"
