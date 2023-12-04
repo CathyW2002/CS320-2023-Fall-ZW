@@ -11,8 +11,6 @@ Notes:
 2. You may NOT use OCaml standard library functions directly.
 
 *)
-
-
 type const =
   | Int of int
   | Bool of bool
@@ -102,44 +100,6 @@ let parse_const =
   parse_unit <|>
   parse_symbol
 
-let rec parse_com () =
-  let* _ = pure () in
-  Printf.printf "Parsing command...\n";
-  (keyword "Push" >> parse_const >>= fun c -> 
-  Printf.printf "Parsed Push\n";
-  pure (Push c)) <|>
-  (keyword "Pop" >> pure Pop) <|>
-  (keyword "Trace" >>= fun () -> pure Trace) <|>
-  (keyword "Swap" >> pure Swap) <|>
-  (keyword "Add" >> pure Add) <|>
-  (keyword "Sub" >> pure Sub) <|>
-  (keyword "Mul" >> pure Mul) <|>
-  (keyword "Div" >> pure Div) <|>
-  (keyword "And" >> pure And) <|>
-  (keyword "Or" >> pure Or) <|>
-  (keyword "Not" >> pure Not) <|>
-  (keyword "Lt" >> pure Lt) <|>
-  (keyword "Gt" >> pure Gt) <|>
-  (keyword "If" >> parse_coms () >>= fun c1 -> 
-   keyword "Else" >> parse_coms () >>= fun c2 -> 
-   keyword "End" >> pure (IfElse(c1, c2))) <|>  
-  (keyword "Bind" >> pure Bind) <|>
-  (keyword "Lookup" >> pure Lookup) <|>
-  (keyword "Fun" >> 
-   parse_symbol >>= (function 
-                      | Symbol sym -> 
-                        keyword "{" >> 
-                        parse_coms () >>= fun body -> 
-                        keyword "}" >> 
-                        pure (Fun(sym, body))
-                      | _ -> fail)) <|>  
-  (keyword "Call" >> pure Call) <|>
-  (keyword "Return" >> pure Return)
-and parse_coms () =
-  let* _ = pure () in 
-  many (parse_com () << keyword ";")
-
-
 type trace = string list
 type prog = coms
 
@@ -156,6 +116,7 @@ let str_of_int (n : int) : string =
     string_append "-" (str_of_nat (-n))
   else str_of_nat n
 
+
 let toString (c : const) : string =
   match c with
   | Int i -> str_of_int i
@@ -163,6 +124,47 @@ let toString (c : const) : string =
   | Bool false -> "False"
   | Unit -> "Unit"
   | Symbol s -> s
+
+let debug_print str = 
+  pure (Printf.printf "%s\n" str; flush stdout)
+
+
+let rec parse_com () =
+  let* _ = pure () in
+  Printf.printf "Parsing command...\n";
+  (keyword "Push" >> parse_const >>= fun c -> 
+    Printf.printf "Parsed Push with const: %s\n" (toString c);
+    pure (Push c)) <|>
+  (keyword "Pop" >> pure Pop) <|>
+  (keyword "Trace" >> pure Trace) <|>
+  (keyword "Swap" >> pure Swap) <|>
+  (keyword "Add" >> pure Add) <|>
+  (keyword "Sub" >> pure Sub) <|>
+  (keyword "Mul" >> pure Mul) <|>
+  (keyword "Div" >> pure Div) <|>
+  (keyword "And" >> pure And) <|>
+  (keyword "Or" >> pure Or) <|>
+  (keyword "Not" >> pure Not) <|>
+  (keyword "Lt" >> pure Lt) <|>
+  (keyword "Gt" >> pure Gt) <|>
+  (keyword "If" >> parse_coms () >>= fun c1 -> 
+    keyword "Else" >> parse_coms () >>= fun c2 -> 
+    keyword "End" >> pure (IfElse(c1, c2))) <|>  
+  (keyword "Bind" >> pure Bind) <|>
+  (keyword "Lookup" >> pure Lookup) <|>
+  (keyword "Fun" >>
+   whitespaces >>  (* Ensure separation from 'Fun' keyword *)
+   keyword "{" >>
+   parse_coms () >>= fun body ->  (* Parse the function body *)
+   keyword "}" >>
+   debug_print "Parsed function body" >>
+   pure (Fun ("anonymous", body))) <|>  
+  (keyword "Call" >> pure Call) <|>
+  (keyword "Return" >> pure Return)
+and parse_coms () =
+  let* _ = pure () in 
+  many (parse_com () << keyword ";")
+
 
 type stack_item =
   | Const of const
@@ -269,8 +271,7 @@ let rec eval s t e p =
     (match s with
      | Const (Symbol sym) :: Const v :: s0 -> eval s0 t ((sym, v) :: e) p0
      | _ :: s0      (* BindError1 *) -> eval [] ("Panic" :: t) e p0
-     | []           (* BindError2 *) -> eval [] ("Panic" :: t) e p0
-     | _ :: []      (* BindError3 *) -> eval [] ("Panic" :: t) e p0)
+     | []           (* BindError2 *) -> eval [] ("Panic" :: t) e p0)
   | Lookup :: p0 ->
     (match s with
      | Const (Symbol sym) :: s0 -> 
@@ -280,37 +281,15 @@ let rec eval s t e p =
      | _ :: s0      (* LookupError1 *) -> eval [] ("Panic" :: t) e p0
      | []           (* LookupError2 *) -> eval [] ("Panic" :: t) e p0)
   | Fun (name, body) :: p0 ->
-    (match s with
-     | Const (Symbol sym) :: Const v :: s0 ->
-        let closure = { body; env = e } in
-        eval (Closure closure :: s) t e p0
-     | _ :: s0      (* FunError1 *) -> eval [] ("Panic" :: t) e p0
-     | []           (* FunError2 *) -> eval [] ("Panic" :: t) e p0)
+     let closure = { body; env = e } in
+     eval (Closure closure :: s) t e p0
   | Call :: p0 ->
     (match s with
      | Closure { body; env } :: s0 -> eval (Marker (s0, e) :: s0) t env body
      | _ :: s0      (* CallError1 *) -> eval [] ("Panic" :: t) e p0
-     | []           (* CallError2 *) -> eval [] ("Panic" :: t) e p0
-     | _ :: []      (* CallError3 *) -> eval [] ("Panic" :: t) e p0)
+     | []           (* CallError2 *) -> eval [] ("Panic" :: t) e p0)
   | Return :: p0 ->
     (match s with
      | Marker (s0, env0) :: _ -> eval s0 t env0 p0
      | _ :: s0      (* ReturnError1 *) -> eval [] ("Panic" :: t) e p0
-     | []           (* ReturnError2 *) -> eval [] ("Panic" :: t) e p0
-     | _ :: []      (* ReturnError3 *) -> eval [] ("Panic" :: t) e p0)
-  | _ -> eval s ("Panic" :: t) e []
-
-
-(* ------------------------------------------------------------ *)
-
-(* putting it all together [input -> parser -> eval -> output] *)
-
-let interp (s : string) : string list option =
-  Printf.printf "Interpreting...\n";
-  match string_parse (whitespaces >> parse_coms ()) s with
-  | Some (p, []) ->
-      let initial_stack = [] in  (* Initialize an empty stack *)
-      let initial_trace = [] in  (* Initialize an empty trace *)
-      let initial_environment = [] in  (* Initialize an empty environment *)
-      Some (eval initial_stack initial_trace initial_environment p)  (* Start evaluation with the parsed program *)
-  | _ -> None
+     | []           (* ReturnError2 *) -> eval [] ("Panic" :: t) e p0)
