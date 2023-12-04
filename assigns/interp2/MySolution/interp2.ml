@@ -293,3 +293,13 @@ let rec eval s t e p =
      | Marker (s0, env0) :: _ -> eval s0 t env0 p0
      | _ :: s0      (* ReturnError1 *) -> eval [] ("Panic" :: t) e p0
      | []           (* ReturnError2 *) -> eval [] ("Panic" :: t) e p0)
+
+let interp (s : string) : string list option =
+  Printf.printf "Interpreting...\n";
+  match string_parse (whitespaces >> parse_coms ()) s with
+  | Some (p, []) ->
+      let initial_stack = [] in  (* Initialize an empty stack *)
+      let initial_trace = [] in  (* Initialize an empty trace *)
+      let initial_environment = [] in  (* Initialize an empty environment *)
+      Some (eval initial_stack initial_trace initial_environment p)  (* Start evaluation with the parsed program *)
+  | _ -> None
